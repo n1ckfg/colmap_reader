@@ -31,6 +31,7 @@ void ofApp::draw() {
                 ofMultMatrix(rotMatrix);
                 
                 ofDrawBox(10);
+                ofDrawLine(0.0, 0.0, 0.0, 0.0, -200.0, 0.0);
                 
                 ofPopMatrix();
             }
