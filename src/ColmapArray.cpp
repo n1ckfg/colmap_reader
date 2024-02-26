@@ -66,8 +66,8 @@ void ColmapArray::loadColmapImages(string filePath) {
                 float qw = ofToFloat(lineArray[1]);
                 
                 float tx = ofToFloat(lineArray[5]);
-                float ty = ofToFloat(lineArray[6]);
-                float tz = ofToFloat(lineArray[7]);
+                float ty = ofToFloat(lineArray[7]);
+                float tz = ofToFloat(lineArray[6]);
                 
                 ofQuaternion rot = ofQuaternion(qx, qy, qz, qw);
                 ofVec3f pos = ofVec3f(tx, ty, tz);

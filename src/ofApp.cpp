@@ -12,7 +12,33 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
+    ofBackground(0);
 
+    cam.begin();
+    ofEnableDepthTest();
+    ofDrawGrid(20, 10, true, true, true, true);
+    
+    for (int i=0; i<colmapArray.cameras.size(); i++) {
+        ColmapCamera& ccam = colmapArray.cameras[i];
+        
+        if (ccam.positions.size() == ccam.rotations.size()) {
+            for (int j=0; j<ccam.positions.size(); j++) {
+                ofPushMatrix();
+                ofTranslate(ccam.positions[j] * 50.0);
+                
+                ofMatrix4x4 rotMatrix;
+                ccam.rotations[j].get(rotMatrix);
+                ofMultMatrix(rotMatrix);
+                
+                ofDrawBox(10);
+                
+                ofPopMatrix();
+            }
+        }
+    }
+    
+    ofDisableDepthTest();
+    cam.end();
 }
 
 //--------------------------------------------------------------
