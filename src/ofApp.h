@@ -1,16 +1,16 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ColmapCamera.h"
+#include "ColmapArray.h"
 
-class ofApp : public ofBaseApp{
+class ofApp : public ofBaseApp {
+    
 	public:
 		void setup();
 		void update();
 		void draw();
-		
-        void loadColmapFile(string filePath);
-        vector<ColmapCamera> cameras;
+        
+        ColmapArray colmapArray;
     
 		void keyPressed(int key);
 		void keyReleased(int key);
@@ -23,4 +23,5 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
+    
 };
