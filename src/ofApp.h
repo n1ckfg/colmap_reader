@@ -11,7 +11,8 @@ class ofApp : public ofBaseApp {
 		void draw();
         
         ColmapArray colmapArray;
-        
+        vector<ofVec2f> centroids;
+    
         ofEasyCam cam; // add mouse controls for camera movement
 
 		void keyPressed(int key);

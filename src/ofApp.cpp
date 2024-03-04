@@ -3,6 +3,26 @@
 //--------------------------------------------------------------
 void ofApp::setup() {
     colmapArray = ColmapArray();
+    
+    string filePath = ofToDataPath("test_centroids.txt");
+    std::ifstream file(filePath);
+    if (!file.is_open()) {
+        ofLogError() << "Could not open file: " << filePath;
+        return;
+    }
+    
+    std::string line;
+    while (std::getline(file, line)) {
+        if (!line.empty() && line[0] != '#') {
+            vector<string> centroidsString = ofSplitString(line, ",");
+            for (int i=0; i<centroidsString.size(); i++) {
+                vector<string> centroidString = ofSplitString(centroidsString[i], " ");
+                float x = ofToFloat(centroidString[0]);
+                float y = ofToFloat(centroidString[1]);
+                centroids.push_back(ofVec2f(x, y));
+            }
+        }
+    }   
 }
 
 //--------------------------------------------------------------
