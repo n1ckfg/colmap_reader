@@ -25,6 +25,26 @@ void ofApp::setup() {
     }   
 }
 
+Eigen::Vector3d triangulate_simple(const std::vector<Eigen::Vector2d>& points, const std::vector<Eigen::Matrix<double, 3, 4>>& camera_mats) {
+    int num_cams = camera_mats.size();
+    Eigen::Matrix<double, Eigen::Dynamic, 4> A(num_cams * 2, 4);
+
+    for (int i = 0; i < num_cams; ++i) {
+        double x = points[i](0);
+        double y = points[i](1);
+        Eigen::Matrix<double, 3, 4> mat = camera_mats[i];
+
+        A.block(i * 2, 0, 1, 4) = x * mat.row(2) - mat.row(0);
+        A.block(i * 2 + 1, 0, 1, 4) = y * mat.row(2) - mat.row(1);
+    }
+
+    Eigen::JacobiSVD<Eigen::MatrixXd> svd(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
+    Eigen::Vector4d p3d_homogeneous = svd.matrixV().col(3);
+    Eigen::Vector3d p3d = p3d_homogeneous.head(3) / p3d_homogeneous(3);
+
+    return p3d;
+}
+
 //--------------------------------------------------------------
 void ofApp::update() {
 
