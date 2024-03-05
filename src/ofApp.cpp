@@ -26,7 +26,7 @@ void ofApp::setup() {
     
     positions = colmapArray.cameras[0].positions;
     rotations = colmapArray.cameras[0].rotations;
-    testPoint = triangulateCentroids(centroids, positions, rotations) * globalScale;
+    testPoint = triangulate(centroids, positions, rotations) * globalScale;
 }
 
 Eigen::Vector2d ofApp::ofToEigenVec2(ofVec2f input) {
@@ -61,7 +61,7 @@ Eigen::Matrix<double, 3, 4> ofApp::convertToMatEigen(const Eigen::Vector3d& tran
     return transformationMatrix;
 }
 
-Eigen::Vector3d ofApp::triangulateSimpleEigen(const vector<Eigen::Vector2d>& points, const vector<Eigen::Matrix<double, 3, 4>>& camera_mats) {
+Eigen::Vector3d ofApp::triangulateEigen(const vector<Eigen::Vector2d>& points, const vector<Eigen::Matrix<double, 3, 4>>& camera_mats) {
     int num_cams = camera_mats.size();
     Eigen::Matrix<double, Eigen::Dynamic, 4> A(num_cams * 2, 4);
 
@@ -78,10 +78,20 @@ Eigen::Vector3d ofApp::triangulateSimpleEigen(const vector<Eigen::Vector2d>& poi
     Eigen::Vector4d p3d_homogeneous = svd.matrixV().col(3);
     Eigen::Vector3d p3d = p3d_homogeneous.head(3) / p3d_homogeneous(3);
 
+    cout << "Reprojection error: " << reprojectionErrorEigen(camera_mats[0], points[0], p3d) << endl;
+
     return p3d;
 }
 
-ofVec3f ofApp::triangulateCentroids(vector<ofVec2f>& centroids, vector<ofVec3f>& positions, vector<ofQuaternion>& rotations) {
+double ofApp::reprojectionErrorEigen(const Eigen::Matrix<double, 3, 4>& P, const Eigen::Vector2d& observed, const Eigen::Vector3d& X) {
+    Eigen::Vector4d Xh = X.homogeneous();
+    Eigen::Vector3d projected = P * Xh;
+    Eigen::Vector2d projected_normalized = projected.hnormalized();
+
+    return (observed - projected_normalized).norm();
+}
+
+ofVec3f ofApp::triangulate(vector<ofVec2f>& centroids, vector<ofVec3f>& positions, vector<ofQuaternion>& rotations) {
     if (centroids.size() == positions.size() && centroids.size() == rotations.size()) {
         vector<Eigen::Vector2d> points;
         vector<Eigen::Matrix<double, 3, 4>> camera_mats;
@@ -91,7 +101,8 @@ ofVec3f ofApp::triangulateCentroids(vector<ofVec2f>& centroids, vector<ofVec3f>&
             camera_mats.push_back(convertToMatEigen(ofToEigenVec3(positions[i]), ofToEigenQuat(rotations[i])));
         }
         
-        Eigen::Vector3d p = triangulateSimpleEigen(points, camera_mats);
+        Eigen::Vector3d p = triangulateEigen(points, camera_mats);
+
         return eigenToOfVec3(p);
     } else {
         return ofVec3f();

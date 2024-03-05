@@ -24,10 +24,10 @@ class ofApp : public ofBaseApp {
     
         ofEasyCam cam; // add mouse controls for camera movement
         
-        ofVec3f triangulateCentroids(vector<ofVec2f>& centroids, vector<ofVec3f>& positions, vector<ofQuaternion>& rotations);
+        ofVec3f triangulate(vector<ofVec2f>& centroids, vector<ofVec3f>& positions, vector<ofQuaternion>& rotations);
     
-        Eigen::Vector3d triangulateSimpleEigen(const vector<Eigen::Vector2d>& points, const vector<Eigen::Matrix<double, 3, 4>>& camera_mats);
-
+        Eigen::Vector3d triangulateEigen(const vector<Eigen::Vector2d>& points, const vector<Eigen::Matrix<double, 3, 4>>& camera_mats);
+        double reprojectionErrorEigen(const Eigen::Matrix<double, 3, 4>& P, const Eigen::Vector2d& observed, const Eigen::Vector3d& X);
         Eigen::Matrix<double, 3, 4> convertToMatEigen(const Eigen::Vector3d& translation, const Eigen::Quaterniond& quaternion);
         
         Eigen::Vector2d ofToEigenVec2(ofVec2f input);
