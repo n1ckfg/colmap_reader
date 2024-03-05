@@ -26,7 +26,9 @@ class ofApp : public ofBaseApp {
         
         ofVec3f triangulateCentroids(vector<ofVec2f>& centroids, vector<ofVec3f>& positions, vector<ofQuaternion>& rotations);
     
-        Eigen::Vector3d triangulateEigen(const vector<Eigen::Vector2d>& points, const vector<Eigen::Matrix<double, 3, 4>>& camera_mats);
+        Eigen::Vector3d triangulateSimpleEigen(const vector<Eigen::Vector2d>& points, const vector<Eigen::Matrix<double, 3, 4>>& camera_mats);
+        //Eigen::MatrixXd triangulatePossibleEigen(const Eigen::Tensor<double, 4>& points, bool undistort = true, int min_cams = 2, bool progress = false, double threshold = 0.5);
+
         Eigen::Matrix<double, 3, 4> convertToMatEigen(const Eigen::Vector3d& translation, const Eigen::Quaterniond& quaternion);
         
         Eigen::Vector2d ofToEigenVec2(ofVec2f input);

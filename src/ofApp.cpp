@@ -61,7 +61,7 @@ Eigen::Matrix<double, 3, 4> ofApp::convertToMatEigen(const Eigen::Vector3d& tran
     return transformationMatrix;
 }
 
-Eigen::Vector3d ofApp::triangulateEigen(const vector<Eigen::Vector2d>& points, const vector<Eigen::Matrix<double, 3, 4>>& camera_mats) {
+Eigen::Vector3d ofApp::triangulateSimpleEigen(const vector<Eigen::Vector2d>& points, const vector<Eigen::Matrix<double, 3, 4>>& camera_mats) {
     int num_cams = camera_mats.size();
     Eigen::Matrix<double, Eigen::Dynamic, 4> A(num_cams * 2, 4);
 
@@ -81,6 +81,99 @@ Eigen::Vector3d ofApp::triangulateEigen(const vector<Eigen::Vector2d>& points, c
     return p3d;
 }
 
+/*
+Eigen::MatrixXd ofApp::triangulatePossibleEigen(const Eigen::Tensor<double, 4>& points, bool undistort = true, int min_cams = 2, bool progress = false, double threshold = 0.5) {
+    assert(points.dimension(0) == cameras.size() && "Invalid points shape, first dimension should be equal to number of cameras.");
+
+    int n_cams = static_cast<int>(points.dimension(0));
+    int n_points = static_cast<int>(points.dimension(1));
+    int n_possible = static_cast<int>(points.dimension(2));
+
+    Eigen::MatrixXd out(n_points, 3);
+    Eigen::Tensor<bool, 3> picked_vals(n_cams, n_points, n_possible);
+    Eigen::VectorXd errors(n_points);
+    Eigen::Tensor<double, 3> points_2d(n_cams, n_points, 2);
+
+    std::unordered_map<int, std::unordered_map<int, std::vector<std::pair<int, int>>>> all_iters;
+
+    for (int cam_num = 0; cam_num < n_cams; ++cam_num) {
+        for (int point_num = 0; point_num < n_points; ++point_num) {
+            for (int possible_num = 0; possible_num < n_possible; ++possible_num) {
+                if (!std::isnan(points(cam_num, point_num, possible_num, 0))) {
+                    all_iters[point_num][cam_num].push_back(std::make_pair(cam_num, possible_num));
+                }
+            }
+        }
+    }
+
+    for (const auto& it : all_iters) {
+        for (const auto& inner_it : it.second) {
+            inner_it.second.push_back(std::make_pair(inner_it.first, -1));
+        }
+    }
+
+    for (int point_ix = 0; point_ix < n_points; ++point_ix) {
+        double best_error = 200;
+        Eigen::Vector3d best_point;
+
+        int n_cams_max = static_cast<int>(all_iters[point_ix].size());
+
+        for (const auto& picked : cartesian_product(all_iters[point_ix].begin(), all_iters[point_ix].end())) {
+            std::vector<std::pair<int, int>> picked_valid;
+            for (const auto& p : picked) {
+                if (p.second != -1) {
+                    picked_valid.push_back(p);
+                }
+            }
+
+            if (picked_valid.size() < min_cams && picked_valid.size() != n_cams_max) {
+                continue;
+            }
+
+            std::vector<int> cnums, xnums;
+            for (const auto& p : picked_valid) {
+                cnums.push_back(p.first);
+                xnums.push_back(p.second);
+            }
+
+            Eigen::Tensor<double, 3> pts = points.slice(cnums, point_ix, xnums);
+            MyTriangulator cc = subset_cameras(cnums);
+
+            Eigen::VectorXd p3d = cc.triangulate(pts, undistort);
+            double err = cc.reprojection_error(p3d, pts, true);
+
+            if (err < best_error) {
+                best_point = p3d.topRows(3);
+                best_error = err;
+
+                if (best_error < threshold) {
+                    break;
+                }
+            }
+        }
+
+        if (best_error < 200) {
+            out.row(point_ix) = best_point;
+            std::vector<std::pair<int, int>> picked_valid;
+            for (const auto& p : cartesian_product(all_iters[point_ix].begin(), all_iters[point_ix].end())) {
+                if (p.second != -1) {
+                    picked_valid.push_back(p);
+                }
+            }
+            for (const auto& p : picked_valid) {
+                cnums.push_back(p.first);
+                xnums.push_back(p.second);
+            }
+            picked_vals.slice(cnums, point_ix, xnums) = true;
+            errors(point_ix) = best_error;
+            points_2d.slice(cnums, point_ix) = points.slice(cnums, point_ix, xnums);
+        }
+    }
+
+    return out;
+}
+*/
+
 ofVec3f ofApp::triangulateCentroids(vector<ofVec2f>& centroids, vector<ofVec3f>& positions, vector<ofQuaternion>& rotations) {
     if (centroids.size() == positions.size() && centroids.size() == rotations.size()) {
         vector<Eigen::Vector2d> points;
@@ -91,7 +184,7 @@ ofVec3f ofApp::triangulateCentroids(vector<ofVec2f>& centroids, vector<ofVec3f>&
             camera_mats.push_back(convertToMatEigen(ofToEigenVec3(positions[i]), ofToEigenQuat(rotations[i])));
         }
         
-        Eigen::Vector3d p = triangulateEigen(points, camera_mats);
+        Eigen::Vector3d p = triangulateSimpleEigen(points, camera_mats);
         return eigenToOfVec3(p);
     } else {
         return ofVec3f();
